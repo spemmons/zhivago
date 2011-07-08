@@ -1,0 +1,21 @@
+=== produce a joint probability distribution based on readings and its references(?) -- host_id,device_id,...
+
+=== produce a frequency distribution based on a coarse-graining of lat/lon; map to a cell tower 
+
+=== re-introduce stats for less important models? -- account, gateway, event...
+
+=== use 'none' for missing names (especially gateways)
+
+
+
+XXX create a rake task to import new captures for already-imported hosts
+
+XXX create a rake task to grab new captures for already-imported hosts
+
+XXX re-introduce stats for capture, host, and device
+
+XXX figure out a solution to AMJ having slicehost as its rails environment in the mongrel_cluster.yml; consider something in the alias.yml file
+
+XXX correct for timezone
+
+XXX figure out how to profile import to speed it up before importing big captures for geomoto, cartasite, rsc, etc...
