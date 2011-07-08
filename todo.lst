@@ -4,9 +4,9 @@
 
 === re-introduce stats for less important models? -- account, gateway, event...
 
-=== use 'none' for missing names (especially gateways)
 
 
+XXX use 'none' for missing names (especially gateways)
 
 XXX create a rake task to import new captures for already-imported hosts
 
