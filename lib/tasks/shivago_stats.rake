@@ -1,10 +1,16 @@
 namespace :shivago do
 
+  desc 'reset all periodic stats'
+  task :reset_periodic_stats => :environment do
+    PeriodicStat.reset_all(shivago_logger)
+  end
+
   DAY_IN_SECONDS = 24 * 60 * 60
 
   # select timestampdiff(month,oldest_reading_at,now()) age,timestampdiff(month,oldest_reading_at,newest_reading_at) duration,count(*) from devices group by timestampdiff(month,oldest_reading_at,now()),timestampdiff(month,oldest_reading_at,newest_reading_at) order by timestampdiff(month,oldest_reading_at,now()),timestampdiff(month,oldest_reading_at,newest_reading_at)
   # select timestampdiff(month,oldest_reading_at,now()) age,timestampdiff(month,oldest_reading_at,newest_reading_at) duration,count(*) from devices where account_id in (select a.id from accounts a where a.id = account_id and host_id = 24) group by timestampdiff(month,oldest_reading_at,now()),timestampdiff(month,oldest_reading_at,newest_reading_at) order by timestampdiff(month,oldest_reading_at,now()),timestampdiff(month,oldest_reading_at,newest_reading_at)
 
+  desc 'produce aging stats'
   task :age_stats => :environment do
 
     min_reading_at = ENV['min_reading_at'] ? Time.zone.parse(ENV['min_reading_at']) : Time.gm(2010,5,20)

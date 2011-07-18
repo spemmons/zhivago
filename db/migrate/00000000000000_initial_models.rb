@@ -112,16 +112,26 @@ class InitialModels < ActiveRecord::Migration
     end
 
     partitions = []
-    current_date = Time.parse('2007-01-01 UTC')
+    current_date = Time.parse('2009-01-01 UTC')
     end_date = Time.parse('2012-01-01 UTC')
     while current_date <= end_date do
-      partitions << current_date.strftime("partition y%Ym%m values less than (to_days('%Y-%m-%d'))")
-      current_date = current_date.advance(:months => 1)
+      partitions << current_date.strftime("partition y%Yw%U values less than (to_days('%Y-%m-%d'))")
+      current_date = current_date.advance(:days => 7)
     end
 
     execute %(alter table readings drop primary key, modify created_at datetime not null default '0000-00-00 00:00:00', add primary key(id,created_at))
     execute %(alter table readings partition by range (to_days(created_at)) (
       #{partitions.join(",\n      ")}))
+
+    create_table :periodic_stats do |t|
+      t.integer :gateway_id,:null => false,:default => 0
+      t.datetime :starting_at,:null => false,:default => '0000-00-00 00:00:00'
+      t.string :host_name
+      t.string :gateway_name
+      t.integer :devices_available,:null => false,:default => 0
+      t.integer :devices_reported,:null => false,:default => 0
+      t.integer :readings_sent,:null => false,:default => 0
+    end
 
   end
 
@@ -133,5 +143,6 @@ class InitialModels < ActiveRecord::Migration
     drop_table :accounts
     drop_table :devices
     drop_table :readings
+    drop_table :periodic_stats
   end
 end

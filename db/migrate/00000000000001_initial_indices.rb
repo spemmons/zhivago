@@ -7,7 +7,7 @@ class InitialIndices < ActiveRecord::Migration
 
   def self.down
     remove_index :readings,:capture_id
-    remove_index :readings,[:host_id,:created_at]
-    remove_index :readings,[:device_id,:created_at]
+    remove_index :readings,[:created_at,:host_id]
+    remove_index :readings,[:created_at,:device_id]
   end
 end

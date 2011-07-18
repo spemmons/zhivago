@@ -54,10 +54,10 @@ class Capture < ActiveRecord::Base
   def import_capture_file(capture_file)
     require 'csv'
 
-    logger.info "...#{Time.now.to_formatted_s(:db)}: processing #{capture_file}"
+    logger.info "...#{Time.now.to_s(:db)}: processing #{capture_file}"
     line_number = 0
     CSV.foreach(capture_file) do | line |
-      logger.info "...#{Time.now.to_formatted_s(:db)}: #{line_number / 1024}K lines" if (line_number += 1) % 10240 == 0
+      logger.info "...#{Time.now.to_s(:db)}: #{line_number / 1024}K lines" if (line_number += 1) % 10240 == 0
       if line_number > 1
         case line[0]
           when 'a'
@@ -70,20 +70,20 @@ class Capture < ActiveRecord::Base
             note_device(line[1],line[2],line[3].to_i,line[4].to_i)
           when 'r'
             if line[7].blank? or (created_at = Time.parse("#{line[7]} #{self.host.timezone}").utc) < DATE_TOO_OLD or created_at > DATE_TOO_NEW
-              logger.info "...#{Time.now.to_formatted_s(:db)}: invalid date: #{line[7]} at #{line_number}"
+              logger.info "...#{Time.now.to_s(:db)}: invalid date: #{line[7]} at #{line_number}"
             else
               create_reading(line[1].to_i,line[2].to_i,line[3],line[4],line[5],line[6],created_at)
             end
           when 'f'
-            logger.info "...#{Time.now.to_formatted_s(:db)}: final reading ID:#{line[1]}"
+            logger.info "...#{Time.now.to_s(:db)}: final reading ID:#{line[1]}"
           else
-            logger.info "...#{Time.now.to_formatted_s(:db)}: unexpected entry at #{line_number}: #{line.inspect}"
+            logger.info "...#{Time.now.to_s(:db)}: unexpected entry at #{line_number}: #{line.inspect}"
           end
       elsif line != HEADERS
         raise 'headers do not match'
       end
     end
-    logger.info "...#{Time.now.to_formatted_s(:db)}: finished #{capture_file}"
+    logger.info "...#{Time.now.to_s(:db)}: finished #{capture_file}"
   end
 
   def load_imported_readings
@@ -92,26 +92,26 @@ class Capture < ActiveRecord::Base
     @readings_infile.close
     @readings_infile = nil
 
-    logger.info "...#{Time.now.to_formatted_s(:db)}: loading #{@readings_imported} readings from '#{@readings_infile_filename}'"
+    logger.info "...#{Time.now.to_s(:db)}: loading #{@readings_imported} readings from '#{@readings_infile_filename}'"
     self.class.connection.execute "load data infile '#{@readings_infile_filename}' into table readings"
     first_imported_reading_id = self.class.connection.select_value "select last_insert_id()"
     last_imported_reading_id = first_imported_reading_id + @readings_imported - 1
 
     File.delete @readings_infile_filename
 
-    logger.info "...#{Time.now.to_formatted_s(:db)}: reset capture stats"
+    logger.info "...#{Time.now.to_s(:db)}: reset capture stats"
     self.reading_count += @readings_imported
     self.first_reading = Reading.find(first_imported_reading_id) if self.first_reading_id == 0
     self.last_reading = Reading.find(last_imported_reading_id)
     self.save!
 
-    logger.info "...#{Time.now.to_formatted_s(:db)}: reset host stats"
+    logger.info "...#{Time.now.to_s(:db)}: reset host stats"
     self.host.reset_reading_stats
 
-    logger.info "...#{Time.now.to_formatted_s(:db)}: reset other stats"
+    logger.info "...#{Time.now.to_s(:db)}: reset other stats"
     @cache_helper.reset_reading_stats
 
-    logger.info "...#{Time.now.to_formatted_s(:db)}: finished #{@readings_imported} readings"
+    logger.info "...#{Time.now.to_s(:db)}: finished #{@readings_imported} readings"
     [first_imported_reading_id,last_imported_reading_id]
   end
 
@@ -152,7 +152,7 @@ class Capture < ActiveRecord::Base
     event = fix_event_snafu(device,event_index)
 
     @readings_infile,@readings_imported = File.open(@readings_infile_filename = Rails.root + "captures/#{self.name}/readings.txt",'w'),0 unless @readings_infile
-    @readings_infile.puts "\\N\t#{self.to_param}\t#{self.host.to_param}\t#{device.account.to_param}\t#{device.to_param}\t#{event.gateway.to_param}\t#{event.to_param}\t#{infile_value(latitude)}\t#{infile_value(longitude)}\t#{infile_value(ignition)}\t#{infile_value(speed)}\t#{created_at.to_formatted_s(:db)}\t#{Time.now.to_formatted_s(:db)}"
+    @readings_infile.puts "\\N\t#{self.to_param}\t#{self.host.to_param}\t#{device.account.to_param}\t#{device.to_param}\t#{event.gateway.to_param}\t#{event.to_param}\t#{infile_value(latitude)}\t#{infile_value(longitude)}\t#{infile_value(ignition)}\t#{infile_value(speed)}\t#{created_at.to_s(:db)}\t#{Time.now.to_s(:db)}"
     @readings_imported += 1
 
     self.oldest_reading_at = created_at unless self.oldest_reading_at and self.oldest_reading_at < created_at
@@ -221,6 +221,7 @@ class Capture < ActiveRecord::Base
 
   def find_or_create_by_keys(klass,keys,params)
     keys = Array(keys)
+    params.each{|k,v| v.force_encoding('ISO-8859-1').encode!('UTF-8',invalid: :replace,undef: :replace,replace: '?')} # HACK fix invalid encoding problem: "359138032584\235\00016".blank?
     result = klass.first(:conditions => params.select{|k| keys.include?(k)})
     eval "self.#{klass.table_name}_#{result ? 'updated' : 'created'} += 1"
     result || klass.create!(params.merge(:capture_id => self.to_param))

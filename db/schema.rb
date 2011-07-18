@@ -101,6 +101,16 @@ ActiveRecord::Schema.define(:version => 1) do
     t.string   "timezone"
   end
 
+  create_table "periodic_stats", :force => true do |t|
+    t.integer  "gateway_id",        :default => 0, :null => false
+    t.datetime "starting_at",                      :null => false
+    t.string   "host_name"
+    t.string   "gateway_name"
+    t.integer  "devices_available", :default => 0, :null => false
+    t.integer  "devices_reported",  :default => 0, :null => false
+    t.integer  "readings_sent",     :default => 0, :null => false
+  end
+
   create_table "readings", :id => false, :force => true do |t|
     t.integer  "id",                                                        :null => false
     t.integer  "capture_id",                                 :default => 0, :null => false

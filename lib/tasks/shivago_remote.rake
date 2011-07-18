@@ -69,7 +69,7 @@ namespace :shivago do
 
   desc 'list alias options'
   task :list => :environment do
-    puts "ALIAS: '#{Array(collect_alias_options).join(',')}'"
+    puts "ALIAS: #{Array(collect_alias_options).join(',')}"
   end
 
   desc 'initiate a remote export and download the resulting files'

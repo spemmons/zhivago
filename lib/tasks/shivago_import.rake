@@ -25,6 +25,10 @@ namespace :shivago do
     else
       unprocessed_capture_names.each{|capture_directory| Capture.import_for_host(host.name,host.timezone,capture_directory)}
     end
+  rescue
+    shivago_logger.info "ERROR-A:#{$!}"
+    $@.each{|line| shivago_logger.info line}
+    raise $!
   end
 
   def resolve_host_from_params
