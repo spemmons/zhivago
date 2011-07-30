@@ -2,7 +2,16 @@ namespace :shivago do
 
   desc 'reset all periodic stats'
   task :reset_periodic_stats => :environment do
-    PeriodicStat.reset_all(shivago_logger)
+    case ENV['alias']
+      when '*'
+        PeriodicStat.reset_all(shivago_logger)
+      when nil
+        raise 'host alias not specified'
+      when /(.+,.+)/
+        $1.split(',').sort.collect{|name| Host.find_by_name(name)}.each{|host| PeriodicStat.reset_host(host)}
+      else
+        PeriodicStat.reset_host(Host.find_by_name(ENV['alias']))
+    end
   end
 
   DAY_IN_SECONDS = 24 * 60 * 60

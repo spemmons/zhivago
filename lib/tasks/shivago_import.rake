@@ -35,7 +35,7 @@ namespace :shivago do
     raise "no host alias given" unless host_alias = ENV['alias']
     raize "host has not timezone" unless (host_info = all_alias_infos[host_alias]) && (timezone = host_info[:timezone])
 
-    Host.find_by_name(host_alias) || Host.new(:name => host_alias,:timezone => timezone)
+    Host.find_by_name(host_alias) || Host.new(:name => host_alias.dup,:timezone => timezone)
   end
 
 # TESTING

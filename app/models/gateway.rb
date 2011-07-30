@@ -4,6 +4,7 @@ class Gateway < ActiveRecord::Base
 
   has_many :devices
   has_many :events
+  has_many :periodic_stats
 
   include ReadingStats
 end

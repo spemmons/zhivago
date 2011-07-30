@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 1) do
+ActiveRecord::Schema.define(:version => 2) do
 
   create_table "accounts", :force => true do |t|
     t.integer  "capture_id",        :default => 0, :null => false
@@ -91,6 +91,7 @@ ActiveRecord::Schema.define(:version => 1) do
   create_table "hosts", :force => true do |t|
     t.integer  "capture_id",        :default => 0, :null => false
     t.string   "name"
+    t.string   "timezone"
     t.integer  "reading_count",     :default => 0, :null => false
     t.integer  "first_reading_id",  :default => 0, :null => false
     t.integer  "last_reading_id",   :default => 0, :null => false
@@ -98,7 +99,6 @@ ActiveRecord::Schema.define(:version => 1) do
     t.datetime "newest_reading_at"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "timezone"
   end
 
   create_table "periodic_stats", :force => true do |t|
