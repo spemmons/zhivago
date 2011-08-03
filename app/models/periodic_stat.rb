@@ -7,7 +7,7 @@ class PeriodicStat < ActiveRecord::Base
 
   def self.reset_all(logger = Logger.new(STDOUT))
     self.delete_all
-    self.reset_gateway_scope(Gateway.all(:join => :host,:order => 'hosts.name,gateways.name'),logger)
+    self.reset_gateway_scope(Gateway.all(:joins => :host,:order => 'hosts.name,gateways.name'),logger)
   end
 
   def self.reset_host(host,logger = Logger.new(STDOUT))

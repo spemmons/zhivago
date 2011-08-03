@@ -11,8 +11,9 @@ gem 'net-ssh'
 gem 'net-scp'
 gem 'highline'
 
-# TODO shouldn't have to include this in production... need to figure out how to make it conditional
-gem 'test-unit'
+group :test do
+  gem 'test-unit'
+end
 
 # Use unicorn as the web server
 # gem 'unicorn'

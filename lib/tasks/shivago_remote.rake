@@ -6,7 +6,7 @@ namespace :shivago do
   REMOTE_KILL_FILE = "#{REMOTE_DIR}#{KILL_FILE}"
   ALIAS_FILE = 'captures/alias.yml'
 
-  desc 'detect the presence of shivago.rake on a host'
+  desc 'detect the presence of shivago files and processes on a host'
   task :detect do
     host,user,password = collect_remote_params(true)
 
@@ -42,7 +42,7 @@ namespace :shivago do
     require 'net/ssh'
 
     Net::SSH.start(host,user,:password => password) do |ssh|
-      return (ssh.exec!('date') || '') =~ / \d\d\:\d\d\:\d\d (\w\w\w) / && $1
+      return (ssh.exec!('date') || '') =~ / \d\d:\d\d:\d\d (\w\w\w) / && $1
     end
   end
 
@@ -239,7 +239,7 @@ namespace :shivago do
           "cd #{REMOTE_DIR} && sudo -u ublip rake RAILS_ENV=#{remote_environment || info} shivago:#{action} start_after=#{last_reading_id}"
         when :stdout
           case info
-            when /\: stop /
+            when /: stop /
               download_all_csv_files(host,user,password,target)
             when /no readings found/
               readings_expected = false
@@ -263,7 +263,7 @@ namespace :shivago do
 
   def execute_remote_session(host,user,password,&callback)
     Net::SSH.start(host,user,:password => password) do |ssh|
-      raise 'no environment found' unless ssh.exec!("cat #{REMOTE_DIR}config/mongrel_cluster.yml | grep environment") =~ /environment\: (\w+)/
+      raise 'no environment found' unless ssh.exec!("cat #{REMOTE_DIR}config/mongrel_cluster.yml | grep environment") =~ /environment: (\w+)/
 
       remote_environment = $1
 
@@ -316,7 +316,7 @@ namespace :shivago do
 
     Net::SSH.start(host,user,:password => password) do |ssh|
       result = ssh.exec!('ps aux | grep shivago')
-      return result && result =~ /shivago\:export/
+      return result && result =~ /shivago:export/
     end
   end
 

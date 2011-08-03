@@ -1,7 +1,7 @@
 namespace :shivago do
 
-  desc 'reset all periodic stats'
-  task :reset_periodic_stats => :environment do
+  desc 'calculate periodic stats for hosts by alias'
+  task :periodic_stats => :environment do
     case ENV['alias']
       when '*'
         PeriodicStat.reset_all(shivago_logger)

@@ -94,6 +94,7 @@ class Capture < ActiveRecord::Base
 
     logger.info "...#{Time.now.to_s(:db)}: loading #{@readings_imported} readings from '#{@readings_infile_filename}'"
     self.class.connection.execute "load data infile '#{@readings_infile_filename}' into table readings"
+
     first_imported_reading_id = self.class.connection.select_value "select last_insert_id()"
     last_imported_reading_id = first_imported_reading_id + @readings_imported - 1
 
@@ -221,7 +222,7 @@ class Capture < ActiveRecord::Base
 
   def find_or_create_by_keys(klass,keys,params)
     keys = Array(keys)
-    params.each{|k,v| v.force_encoding('ISO-8859-1').encode!('UTF-8',invalid: :replace,undef: :replace,replace: '?')} # HACK fix invalid encoding problem: "359138032584\235\00016".blank?
+    params.each{|k,v| v.force_encoding('ISO-8859-1').encode!('UTF-8',invalid: :replace,undef: :replace,replace: '?') if v} # HACK fix invalid encoding problem: "359138032584\235\00016".blank?
     result = klass.first(:conditions => params.select{|k| keys.include?(k)})
     eval "self.#{klass.table_name}_#{result ? 'updated' : 'created'} += 1"
     result || klass.create!(params.merge(:capture_id => self.to_param))

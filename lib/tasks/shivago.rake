@@ -193,7 +193,7 @@ namespace :shivago do
 
     shivago_logger.info 'KILLING PROCESS'
     `rm #{KILL_FILE}`
-    return true
+    true
   end
 
   def capture_reading(csv,reading)
