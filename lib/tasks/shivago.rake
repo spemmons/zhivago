@@ -9,6 +9,7 @@ namespace :shivago do
   DATE_TOO_OLD = Time.mktime(2000,1,1)
   DATE_TOO_NEW = Time.now.advance(:days => 1)
 
+  desc 'report the approximate number of records to export'
   task :check => :environment do
     setup_alternative_connection
     csv_count,last_reading_id = recover_previous_export

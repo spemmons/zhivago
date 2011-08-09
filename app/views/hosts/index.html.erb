@@ -1,0 +1,53 @@
+<h1>Listing hosts</h1>
+
+<table style="width:100%;">
+  <tr>
+    <th>Name</th>
+    <th>Accounts</th>
+    <th>Gateways</th>
+    <th>Devices</th>
+    <th>Readings</th>
+    <th>First Reported</th>
+    <th>Last Reported</th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% all_accounts,all_gateways,all_devices,all_readings,first_date,last_date = 0,0,0,0,nil,nil %>
+<% @hosts.each do |host|
+   all_accounts += host.accounts.count
+   all_gateways += host.gateways.count
+   all_devices += host.devices.count
+   all_readings += host.reading_count
+   first_date = first_date ? [first_date,host.oldest_reading_at].min : host.oldest_reading_at
+   last_date = last_date ? [last_date,host.newest_reading_at].max : host.newest_reading_at
+%>
+  <tr class="<%= cycle('dark_row', 'light_row')%>">
+    <td><%= host.name %></td>
+    <td class="numeric"><%= number_with_delimiter host.accounts.count %></td>
+    <td class="numeric"><%= number_with_delimiter host.gateways.count %></td>
+    <td class="numeric"><%= number_with_delimiter host.devices.count %></td>
+    <td class="numeric"><%= number_with_delimiter host.reading_count %></td>
+    <td><%= host.oldest_reading_at.to_s(:db) %></td>
+    <td><%= host.newest_reading_at.to_s(:db) %></td>
+    <td><%= link_to 'Show', host %></td>
+    <td><%= link_to 'Edit', edit_host_path(host) %></td>
+  </tr>
+<% end %>
+
+<% if @hosts.any? %>
+  <tr>
+    <th class="numeric"><%= number_with_delimiter @hosts.length %></th>
+    <th class="numeric"><%= number_with_delimiter all_accounts %></th>
+    <th class="numeric"><%= number_with_delimiter all_gateways %></th>
+    <th class="numeric"><%= number_with_delimiter all_devices %></th>
+    <th class="numeric"><%= number_with_delimiter all_readings %></th>
+    <th><%= first_date.to_s(:db) %></th>
+    <th><%= last_date.to_s(:db) %></th>
+    <th></th>
+    <th></th>
+  </tr>
+<% end %>
+</table>
+
+<br />
