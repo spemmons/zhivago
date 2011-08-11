@@ -1,5 +1,28 @@
 namespace :shivago do
 
+  desc 'calculate geographic stats'
+  task :geo_stats => :environment do
+    min_reading_at = ENV['min_reading_at'] ? Time.zone.parse(ENV['min_reading_at']) : Time.gm(2011,1,1)
+    readings_seen,geo_map = 0,{}
+    shivago_logger.info "...#{Time.now.to_s(:db)}: collect counts"
+    Reading.find_each(:conditions => ['created_at > ? and latitude is not null',min_reading_at]) do |reading|
+      shivago_logger.info "...#{Time.now.to_s(:db)}: #{readings_seen / (1024 * 1024)}M readings" if (readings_seen += 1) % (1024 * 1024) == 0
+      x,y = (reading.latitude * 10).to_i,(reading.longitude * 10).to_i
+      row = geo_map[x] ||= {}
+      row[y] = (row[y] || 0) + 1
+    end
+    shivago_logger.info "...#{Time.now.to_s(:db)}: create output"
+    File.open('geo_stats.csv','w') do |file|
+      file.puts 'lat,lon,count'
+      geo_map.each do |x,row|
+        row.each do |y,count|
+          file.puts "#{x},#{y},#{count}"
+        end
+      end
+    end
+    shivago_logger.info "...#{Time.now.to_s(:db)}: done!"
+  end
+
   desc 'calculate periodic stats for hosts by alias'
   task :periodic_stats => :environment do
     case ENV['alias']
