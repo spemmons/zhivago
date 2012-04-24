@@ -4,4 +4,4 @@ log/*.log
 tmp/
 captures/
 .idea/
-.scratch/
+scratch/
