@@ -5,3 +5,4 @@ tmp/
 captures/
 .idea/
 scratch/
+.DS_Store
