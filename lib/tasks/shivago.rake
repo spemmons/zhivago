@@ -14,7 +14,13 @@ namespace :shivago do
     setup_alternative_connection
     csv_count,last_reading_id = recover_previous_export
     reading_min,reading_max,reading_range = check_reading_min_max_range(last_reading_id)
-    shivago_logger.info "last reading ID: #{reading_max}"
+    shivago_logger.info "last_reading_id: #{reading_max}"
+  end
+
+  desc 'geofence stat collection'
+  task :geofences => :environment do
+    setup_alternative_connection
+    Reading.connection.select_rows('select year(created_at),month(created_at),count(*) from geofences group by year(created_at),month(created_at)').each {|row| puts row.collect{|v| v.to_s}.join(',')}
   end
 
   desc 'export readings to file shivago.csv'
@@ -173,7 +179,7 @@ namespace :shivago do
     reading_min = [reading_min,last_reading_id + 1].max if last_reading_id
     reading_max = stats['max_id'].to_i
     if (reading_range = [reading_max - reading_min,0].max) == 0
-      shivago_logger.info("no readings found")
+      shivago_logger.info("approximate_readings: no readings found")
     else
       prefix,suffix,order = reading_range,nil,0
       ['','K','M','G','T'].each do |entry|
@@ -183,7 +189,7 @@ namespace :shivago do
         prefix = next_prefix
         order += 1
       end
-      shivago_logger.info "approximately #{prefix}#{suffix} readings..."
+      shivago_logger.info "approximate_readings: #{prefix}#{suffix}"
     end
 
     [reading_min,reading_max,reading_range]

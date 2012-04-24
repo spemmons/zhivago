@@ -77,6 +77,9 @@ namespace :shivago do
     require 'net/ssh'
 
     action = ENV['action'] || 'check'
+
+    summarize_start(action) if $summarize_actions = action != 'export'
+    
     host,user,password = collect_remote_params(true)
     if host.kind_of?(String)
       execute_remote_action(host,user,password,action)
@@ -84,9 +87,11 @@ namespace :shivago do
       host.each_with_index do |h,index|
         shivago_logger.info '' if index > 0
         shivago_logger.info "HOST: #{h} ACTION: #{action}"
-        execute_remote_action(h,user,password,action)
+        break unless execute_remote_action(h,user,password,action)
       end
     end
+
+    summarize_stop if $summarize_actions
   end
 
   desc 'download shivago*.csv files from a remote host'
@@ -225,6 +230,8 @@ namespace :shivago do
   end
 
   def execute_remote_action(host,user,password,action)
+    continue_processing = true
+
     target,last_reading_id,remote_environment = collect_remote_info(host)
 
     inject_host(host,user,password)
@@ -239,6 +246,8 @@ namespace :shivago do
           "cd #{REMOTE_DIR} && sudo -u ublip rake RAILS_ENV=#{remote_environment || info} shivago:#{action} start_after=#{last_reading_id}"
         when :stdout
           case info
+            when /KILLING PROCESS/
+              continue_processing = false
             when /: stop /
               download_all_csv_files(host,user,password,target)
             when /no readings found/
@@ -259,6 +268,8 @@ namespace :shivago do
     end
 
     clean_host(host,user,password)
+
+    continue_processing
   end
 
   def execute_remote_session(host,user,password,&callback)
@@ -276,6 +287,7 @@ namespace :shivago do
               channel.send_data "#{password}\n"
             else
               print "#{host}> #{data}"
+              summarize_host_data(host,data) if $summarize_actions
               callback.call(:stdout,data)
             end
           end
@@ -347,6 +359,28 @@ namespace :shivago do
       end
     end
     result
+  end
+
+  def summarize_start(action)
+    File.open('shivago_summary.txt','a') {|file| file.puts("#{Time.now.to_s(:db)} - ACTION: #{action}")}
+  end
+
+  def summarize_stop
+    File.open('shivago_summary.txt','a') {|file| file.puts("#{Time.now.to_s(:db)} - DONE\n\n")}
+  end
+
+  def summarize_host_data(host,data)
+    File.open('shivago_summary.txt','a') do |file|
+      data.chomp.split("\n").each do |info|
+        case info
+          when /:/
+            file.puts($summarized_host = host) if host != $summarized_host
+            file.puts "\t#{info}"
+          when /,/
+            file.puts "#{alias_for_host(host)},#{info}"
+        end
+      end
+    end
   end
 
 end
