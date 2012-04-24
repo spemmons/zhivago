@@ -290,7 +290,7 @@ class CaptureTest < ActiveSupport::TestCase
   end
 
   test 'file import' do
-    assert File.exists? 'captures/test/shivago.csv'
+    assert File.exists? 'captures/test/zhivago.csv'
     capture = Capture.import_for_host('test','PDT','test')
     assert_equal 1,capture.hosts_created
     assert_equal 1,capture.accounts_created

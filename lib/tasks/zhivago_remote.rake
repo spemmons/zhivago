@@ -1,22 +1,22 @@
-namespace :shivago do
+namespace :zhivago do
   
   REMOTE_DIR = '/opt/ublip/rails/current/'
-  REMOTE_RAKE_FILE = "#{REMOTE_DIR}lib/tasks/shivago.rake"
+  REMOTE_RAKE_FILE = "#{REMOTE_DIR}lib/tasks/zhivago.rake"
   REMOTE_RECOVERY_FILE = "#{REMOTE_DIR}#{RECOVERY_FILE}"
   REMOTE_KILL_FILE = "#{REMOTE_DIR}#{KILL_FILE}"
   ALIAS_FILE = 'captures/alias.yml'
 
-  desc 'detect the presence of shivago files and processes on a host'
+  desc 'detect the presence of zhivago files and processes on a host'
   task :detect do
     host,user,password = collect_remote_params(true)
 
     if host.kind_of?(String)
-      shivago_logger.info ssh_check_remote_process(host,user,password) ? "running!" : "not running"
-      shivago_logger.info detect_remote_files(host,user,password) ? "files present" : "files missing"
+      zhivago_logger.info ssh_check_remote_process(host,user,password) ? "running!" : "not running"
+      zhivago_logger.info detect_remote_files(host,user,password) ? "files present" : "files missing"
     else
       host.each do |h|
-        shivago_logger.info ssh_check_remote_process(host,user,password) ? "running on #{h}!" : "not running on #{h}"
-        shivago_logger.info detect_remote_files(h,user,password) ? "present on #{h}" : "missing on #{h}"
+        zhivago_logger.info ssh_check_remote_process(host,user,password) ? "running on #{h}!" : "not running on #{h}"
+        zhivago_logger.info detect_remote_files(h,user,password) ? "present on #{h}" : "missing on #{h}"
       end
     end
   end
@@ -28,10 +28,10 @@ namespace :shivago do
     all_infos = all_alias_infos
 
     if host.kind_of?(String)
-      shivago_logger.info "...#{all_infos[alias_for_host(host,all_infos)][:timezone] = get_remote_timezone(host,user,password)}"
+      zhivago_logger.info "...#{all_infos[alias_for_host(host,all_infos)][:timezone] = get_remote_timezone(host,user,password)}"
     else
       host.each do |h|
-        shivago_logger.info "...#{h}: #{all_infos[alias_for_host(h,all_infos)][:timezone] = get_remote_timezone(h,user,password)}"
+        zhivago_logger.info "...#{h}: #{all_infos[alias_for_host(h,all_infos)][:timezone] = get_remote_timezone(h,user,password)}"
       end
     end
 
@@ -46,12 +46,12 @@ namespace :shivago do
     end
   end
 
-  desc 'inject shivago.rake into a target host'
+  desc 'inject zhivago.rake into a target host'
   task :inject do
     inject_host(*collect_remote_params)
   end
 
-  desc 'clean shivago.rake and any other shivago files from target host'
+  desc 'clean zhivago.rake and any other zhivago files from target host'
   task :clean do
     clean_host(*collect_remote_params)
   end
@@ -85,8 +85,8 @@ namespace :shivago do
       execute_remote_action(host,user,password,action)
     else
       host.each_with_index do |h,index|
-        shivago_logger.info '' if index > 0
-        shivago_logger.info "HOST: #{h} ACTION: #{action}"
+        zhivago_logger.info '' if index > 0
+        zhivago_logger.info "HOST: #{h} ACTION: #{action}"
         break unless execute_remote_action(h,user,password,action)
       end
     end
@@ -94,7 +94,7 @@ namespace :shivago do
     summarize_stop if $summarize_actions
   end
 
-  desc 'download shivago*.csv files from a remote host'
+  desc 'download zhivago*.csv files from a remote host'
   task :download do
     host,user,password = collect_remote_params
 
@@ -105,7 +105,7 @@ namespace :shivago do
       any_downloads ||= download_all_csv_files(host,user,password,target)
 
       break unless ssh_check_remote_process(host,user,password)
-      shivago_logger.info '...sleeping'
+      zhivago_logger.info '...sleeping'
       sleep 60
     end
 
@@ -145,7 +145,7 @@ namespace :shivago do
     raise 'no host provided' unless host
 
     user = ENV['user'] || ENV['USER']
-    password = ENV['shivago_password'] || ask('password:'){|q| q.echo = '*'}
+    password = ENV['zhivago_password'] || ask('password:'){|q| q.echo = '*'}
 
     [host,user,password]
   end
@@ -178,7 +178,7 @@ namespace :shivago do
     recovery_info = File.exists?(recovery_file) && YAML::load_file(recovery_file)
     last_reading_id = recovery_info[:last_reading_id] if recovery_info
 
-    return shivago_logger.info "no alias info found for: #{host}" unless host_info = all_infos[host_key]
+    return zhivago_logger.info "no alias info found for: #{host}" unless host_info = all_infos[host_key]
 
     host_info[:last_target] = target
     host_info[:last_reading_id] = last_reading_id if last_reading_id.to_i > 0
@@ -200,7 +200,7 @@ namespace :shivago do
   end
 
   def detect_remote_files(host,user,password)
-    ssh_find_files(host,user,password,"#{REMOTE_DIR}lib/tasks/",/shivago\.rake/).any? || ssh_find_files(host,user,password,REMOTE_DIR,/shivago.*/).any?
+    ssh_find_files(host,user,password,"#{REMOTE_DIR}lib/tasks/",/zhivago\.rake/).any? || ssh_find_files(host,user,password,REMOTE_DIR,/zhivago.*/).any?
   end
 
   def inject_host(host,user,password)
@@ -208,23 +208,23 @@ namespace :shivago do
     require 'net/ssh'
 
     puts "...inject rake file into #{host}"
-    Net::SCP.start(host,user,:password => password){|scp| scp.upload!('lib/tasks/shivago.rake','.')}
+    Net::SCP.start(host,user,:password => password){|scp| scp.upload!('lib/tasks/zhivago.rake','.')}
 
     Net::SSH.start(host,user,:password => password) do |ssh|
-      ssh_sudo_exec(ssh,password,'chown ublip:ublip shivago.rake')
-      ssh_sudo_exec(ssh,password,"mv shivago.rake #{REMOTE_DIR}lib/tasks")
+      ssh_sudo_exec(ssh,password,'chown ublip:ublip zhivago.rake')
+      ssh_sudo_exec(ssh,password,"mv zhivago.rake #{REMOTE_DIR}lib/tasks")
     end
   end
 
   def clean_host(host,user,password)
     if ssh_check_remote_process(host,user,password)
-      shivago_logger.info 'still running!'
+      zhivago_logger.info 'still running!'
     else
-      ssh_find_files(host,user,password,REMOTE_DIR,/shivago\.*/).each do |filename|
-        shivago_logger.info "...remove #{filename} on #{host}"
+      ssh_find_files(host,user,password,REMOTE_DIR,/zhivago\.*/).each do |filename|
+        zhivago_logger.info "...remove #{filename} on #{host}"
         ssh_remove_file(host,user,password,filename)
       end
-      shivago_logger.info "...remove rake file from #{host}"
+      zhivago_logger.info "...remove rake file from #{host}"
       ssh_remove_file(host,user,password,REMOTE_RAKE_FILE)
     end
   end
@@ -240,10 +240,10 @@ namespace :shivago do
     execute_remote_session(host,user,password) do |event,info|
       case event
         when :command
-          shivago_logger.info "#{capture_datetime(Time.now)}: START REMOTE using #{remote_environment || info} start_after=#{last_reading_id}"
-          shivago_logger.info ''
+          zhivago_logger.info "#{capture_datetime(Time.now)}: START REMOTE using #{remote_environment || info} start_after=#{last_reading_id}"
+          zhivago_logger.info ''
 
-          "cd #{REMOTE_DIR} && sudo -u ublip rake RAILS_ENV=#{remote_environment || info} shivago:#{action} start_after=#{last_reading_id}"
+          "cd #{REMOTE_DIR} && sudo -u ublip rake RAILS_ENV=#{remote_environment || info} zhivago:#{action} start_after=#{last_reading_id}"
         when :stdout
           case info
             when /KILLING PROCESS/
@@ -258,8 +258,8 @@ namespace :shivago do
       end
     end
 
-    shivago_logger.info ''
-    shivago_logger.info "#{capture_datetime(Time.now)}: STOP  REMOTE"
+    zhivago_logger.info ''
+    zhivago_logger.info "#{capture_datetime(Time.now)}: STOP  REMOTE"
 
     if readings_expected
       download_all_csv_files(host,user,password,target) # just in case, wouldn't want to lose any!
@@ -302,11 +302,11 @@ namespace :shivago do
   end
 
   def download_all_csv_files(host,user,password,target)
-    if (filenames = ssh_find_files(host,user,password,REMOTE_DIR,/shivago.*\.csv/)).empty?
-      shivago_logger.info 'no CSV files found'
+    if (filenames = ssh_find_files(host,user,password,REMOTE_DIR,/zhivago.*\.csv/)).empty?
+      zhivago_logger.info 'no CSV files found'
       false
     else
-      shivago_logger.info "#{filenames.length} CSV files found"
+      zhivago_logger.info "#{filenames.length} CSV files found"
       filenames.each do |filename|
         download_file(host,user,password,filename,target)
       end
@@ -317,7 +317,7 @@ namespace :shivago do
   def download_file(host,user,password,filename,target)
     require 'net/scp'
 
-    shivago_logger.info "...download #{filename} => #{target}"
+    zhivago_logger.info "...download #{filename} => #{target}"
     Dir.mkdir(target) unless Dir.exist?(target)
     Net::SCP.start(host,user,:password => password){|scp| scp.download!(filename,target)}
     ssh_remove_file(host,user,password,filename)
@@ -327,8 +327,8 @@ namespace :shivago do
     require 'net/ssh'
 
     Net::SSH.start(host,user,:password => password) do |ssh|
-      result = ssh.exec!('ps aux | grep shivago')
-      return result && result =~ /shivago:export/
+      result = ssh.exec!('ps aux | grep zhivago')
+      return result && result =~ /zhivago:export/
     end
   end
 
@@ -345,7 +345,7 @@ namespace :shivago do
 
     Net::SSH.start(host,user,:password => password) do |ssh|
       result = ssh_sudo_exec(ssh,password,"rm #{filename}")
-      shivago_logger.info result if result and result.strip!.length > 0
+      zhivago_logger.info result if result and result.strip!.length > 0
     end
   end
 
@@ -362,15 +362,15 @@ namespace :shivago do
   end
 
   def summarize_start(action)
-    File.open('shivago_summary.txt','a') {|file| file.puts("#{Time.now.to_s(:db)} - ACTION: #{action}")}
+    File.open('zhivago_summary.txt','a') {|file| file.puts("#{Time.now.to_s(:db)} - ACTION: #{action}")}
   end
 
   def summarize_stop
-    File.open('shivago_summary.txt','a') {|file| file.puts("#{Time.now.to_s(:db)} - DONE\n\n")}
+    File.open('zhivago_summary.txt','a') {|file| file.puts("#{Time.now.to_s(:db)} - DONE\n\n")}
   end
 
   def summarize_host_data(host,data)
-    File.open('shivago_summary.txt','a') do |file|
+    File.open('zhivago_summary.txt','a') do |file|
       data.chomp.split("\n").each do |info|
         case info
           when /:/

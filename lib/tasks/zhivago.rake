@@ -1,11 +1,11 @@
 HEADERS = ['v=0.1','a|g:name','d:name:imei:account_id:gateway_id','e:name:gateway_id','r:device_id:event_id:latitude:longitude:ignition:speed:created_at']
 
-namespace :shivago do
+namespace :zhivago do
 
   MAX_READINGS_PER_CSV = 1024 * 1024
-  INPROGRESS_EXPORT_CSV = 'shivago.tmp'
-  RECOVERY_FILE = 'shivago.yml'
-  KILL_FILE = 'shivago.kill'
+  INPROGRESS_EXPORT_CSV = 'zhivago.tmp'
+  RECOVERY_FILE = 'zhivago.yml'
+  KILL_FILE = 'zhivago.kill'
   DATE_TOO_OLD = Time.mktime(2000,1,1)
   DATE_TOO_NEW = Time.now.advance(:days => 1)
 
@@ -14,7 +14,7 @@ namespace :shivago do
     setup_alternative_connection
     csv_count,last_reading_id = recover_previous_export
     reading_min,reading_max,reading_range = check_reading_min_max_range(last_reading_id)
-    shivago_logger.info "last_reading_id: #{reading_max}"
+    zhivago_logger.info "last_reading_id: #{reading_max}"
   end
 
   desc 'geofence stat collection'
@@ -23,7 +23,7 @@ namespace :shivago do
     Reading.connection.select_rows('select year(created_at),month(created_at),count(*) from geofences group by year(created_at),month(created_at)').each {|row| puts row.collect{|v| v.to_s}.join(',')}
   end
 
-  desc 'export readings to file shivago.csv'
+  desc 'export readings to file zhivago.csv'
   task :export => :environment do
     require 'csv'
 
@@ -44,7 +44,7 @@ namespace :shivago do
 
         csv,csv_filename = setup_export_csv(csv_count,reading_range) unless csv
 
-        shivago_logger.info "...#{capture_datetime(Time.now)}: [#{csv_count}] #{reading_count / 1024}K readings" if reading_count % 10240 == 0 and reading_count != 0
+        zhivago_logger.info "...#{capture_datetime(Time.now)}: [#{csv_count}] #{reading_count / 1024}K readings" if reading_count % 10240 == 0 and reading_count != 0
 
         capture_reading(csv,last_reading = reading)
       end
@@ -52,8 +52,8 @@ namespace :shivago do
       cleanup_export_csv(csv,csv_filename,last_reading) if csv
 
     rescue
-      shivago_logger.info "ERROR:#{$!}"
-      $@.each{|line| shivago_logger.info line}
+      zhivago_logger.info "ERROR:#{$!}"
+      $@.each{|line| zhivago_logger.info line}
     ensure
       capture_recovery_info(csv_count,last_reading || last_reading_id) if total_readings > 0
     end
@@ -125,7 +125,7 @@ namespace :shivago do
     csv << HEADERS
 
     csv_filename = make_export_filename(csv_count,reading_range)
-    shivago_logger.info "...#{capture_datetime(Time.now)}: start #{csv_filename}"
+    zhivago_logger.info "...#{capture_datetime(Time.now)}: start #{csv_filename}"
 
     [csv,csv_filename]
   end
@@ -135,7 +135,7 @@ namespace :shivago do
     csv.close
     `mv #{INPROGRESS_EXPORT_CSV} #{csv_filename}`
 
-    shivago_logger.info "...#{capture_datetime(Time.now)}: stop  #{csv_filename}"
+    zhivago_logger.info "...#{capture_datetime(Time.now)}: stop  #{csv_filename}"
   end
 
   def make_export_filename(counter,reading_range)
@@ -143,7 +143,7 @@ namespace :shivago do
     if prefix = ENV['export']
       Time.now.strftime("#{prefix}_%Y%m%d#{suffix}.csv")
     else
-      "shivago#{suffix}.csv"
+      "zhivago#{suffix}.csv"
     end
   end
 
@@ -179,7 +179,7 @@ namespace :shivago do
     reading_min = [reading_min,last_reading_id + 1].max if last_reading_id
     reading_max = stats['max_id'].to_i
     if (reading_range = [reading_max - reading_min,0].max) == 0
-      shivago_logger.info("approximate_readings: no readings found")
+      zhivago_logger.info("approximate_readings: no readings found")
     else
       prefix,suffix,order = reading_range,nil,0
       ['','K','M','G','T'].each do |entry|
@@ -189,7 +189,7 @@ namespace :shivago do
         prefix = next_prefix
         order += 1
       end
-      shivago_logger.info "approximate_readings: #{prefix}#{suffix}"
+      zhivago_logger.info "approximate_readings: #{prefix}#{suffix}"
     end
 
     [reading_min,reading_max,reading_range]
@@ -198,7 +198,7 @@ namespace :shivago do
   def check_kill_file
     return false unless File.exists?(KILL_FILE)
 
-    shivago_logger.info 'KILLING PROCESS'
+    zhivago_logger.info 'KILLING PROCESS'
     `rm #{KILL_FILE}`
     true
   end
@@ -258,24 +258,24 @@ namespace :shivago do
     cache[key] || (cache[key] = generator.call(key))
   end
 
-  def shivago_logger
-    return $shivago_logger if $shivago_logger
+  def zhivago_logger
+    return $zhivago_logger if $zhivago_logger
 
     STDOUT.sync = true
-    $shivago_logger = Logger.new(STDOUT)
+    $zhivago_logger = Logger.new(STDOUT)
   end
 
 # TESTING
 
   task :test_export_utils => :environment do
-    shivago_logger.info "RAILS_ENV: #{Rails.env}"
+    zhivago_logger.info "RAILS_ENV: #{Rails.env}"
 
     setup_alternative_connection
 
     reading_min,reading_max,reading_range = check_reading_min_max_range(nil)
     make_export_filename(0,reading_range)
 
-    shivago_logger.info "SUCCESS!"
+    zhivago_logger.info "SUCCESS!"
   end
 
 end

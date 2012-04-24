@@ -1,17 +1,17 @@
-namespace :shivago do
+namespace :zhivago do
 
   desc 'calculate geographic stats'
   task :geo_stats => :environment do
     min_reading_at = ENV['min_reading_at'] ? Time.zone.parse(ENV['min_reading_at']) : Time.gm(2011,1,1)
     readings_seen,geo_map = 0,{}
-    shivago_logger.info "...#{Time.now.to_s(:db)}: collect counts"
+    zhivago_logger.info "...#{Time.now.to_s(:db)}: collect counts"
     Reading.find_each(:conditions => ['created_at > ? and latitude is not null',min_reading_at]) do |reading|
-      shivago_logger.info "...#{Time.now.to_s(:db)}: #{readings_seen / (1024 * 1024)}M readings" if (readings_seen += 1) % (1024 * 1024) == 0
+      zhivago_logger.info "...#{Time.now.to_s(:db)}: #{readings_seen / (1024 * 1024)}M readings" if (readings_seen += 1) % (1024 * 1024) == 0
       x,y = (reading.latitude * 10).to_i,(reading.longitude * 10).to_i
       row = geo_map[x] ||= {}
       row[y] = (row[y] || 0) + 1
     end
-    shivago_logger.info "...#{Time.now.to_s(:db)}: create output"
+    zhivago_logger.info "...#{Time.now.to_s(:db)}: create output"
     File.open('geo_stats.csv','w') do |file|
       file.puts 'lat,lon,count'
       geo_map.each do |x,row|
@@ -20,14 +20,14 @@ namespace :shivago do
         end
       end
     end
-    shivago_logger.info "...#{Time.now.to_s(:db)}: done!"
+    zhivago_logger.info "...#{Time.now.to_s(:db)}: done!"
   end
 
   desc 'calculate periodic stats for hosts by alias'
   task :periodic_stats => :environment do
     case ENV['alias']
       when '*'
-        PeriodicStat.reset_all(shivago_logger)
+        PeriodicStat.reset_all(zhivago_logger)
       when nil
         raise 'host alias not specified'
       when /(.+,.+)/
@@ -47,11 +47,11 @@ namespace :shivago do
 
     min_reading_at = ENV['min_reading_at'] ? Time.zone.parse(ENV['min_reading_at']) : Time.gm(2010,5,20)
 
-    shivago_logger.info "...#{Time.now.to_formatted_s(:db)}: find devices"
+    zhivago_logger.info "...#{Time.now.to_formatted_s(:db)}: find devices"
     rows = Device.connection.select_rows "select id,oldest_reading_at,newest_reading_at from devices where newest_reading_at > '#{min_reading_at.to_formatted_s(:db)}' order by oldest_reading_at"
 
     $host_names,$gateway_names,$period_lookup = {},{},{}
-    shivago_logger.info "...#{Time.now.to_formatted_s(:db)}: process #{rows.length} rows"
+    zhivago_logger.info "...#{Time.now.to_formatted_s(:db)}: process #{rows.length} rows"
     rows.each {|row| build_age_range(min_reading_at,*row)}
     rows.each {|row| build_lost_range(min_reading_at,$period_lookup.keys.sort.last,*row)}
 
@@ -90,11 +90,11 @@ namespace :shivago do
     conditions += " and h.name = '#{ENV['alias']}'" unless ENV['alias'].blank?
     conditions += " and #{ENV['conditions']}" unless ENV['conditions'].blank?
 
-    shivago_logger.info "...#{Time.now.to_formatted_s(:db)}: start '#{conditions}'"
+    zhivago_logger.info "...#{Time.now.to_formatted_s(:db)}: start '#{conditions}'"
     rows = Device.connection.select_rows "select h.name,g.name,d.id,d.reading_count,d.oldest_reading_at,d.newest_reading_at from hosts h,accounts a,devices d,gateways g where h.id = a.host_id and a.id = account_id and g.id = gateway_id#{conditions} order by d.oldest_reading_at"
 
     $host_names,$gateway_names,$period_lookup = {},{},{}
-    shivago_logger.info "...#{Time.now.to_formatted_s(:db)}: process #{rows.length} rows"
+    zhivago_logger.info "...#{Time.now.to_formatted_s(:db)}: process #{rows.length} rows"
     rows.each {|row| build_device_data_range(*row)}
 
     print_dataset('device_stats.csv')
@@ -108,9 +108,9 @@ namespace :shivago do
     $host_names,$gateway_names,$period_lookup = {},{},{}
     line_number = 0
     infile = ENV['infile'] || 'hourly_export.txt'
-    shivago_logger.info "...#{Time.now.to_formatted_s(:db)}: start #{infile}"
+    zhivago_logger.info "...#{Time.now.to_formatted_s(:db)}: start #{infile}"
     File.foreach(infile) do | line |
-      shivago_logger.info "...#{Time.now.to_formatted_s(:db)}: #{line_number / 1024}K lines read from #{infile}" if (line_number += 1) % 10240 == 0
+      zhivago_logger.info "...#{Time.now.to_formatted_s(:db)}: #{line_number / 1024}K lines read from #{infile}" if (line_number += 1) % 10240 == 0
 
       parts = line.split("\t")
       next if parts[1] == '\N' or parts[2] == '\N' or parts[3] == '\N'
@@ -128,14 +128,14 @@ namespace :shivago do
     $gateway_names = $gateway_names.keys.sort
     line_number = 0
     suffixes = Array(suffixes)
-    shivago_logger.info "...#{Time.now.to_formatted_s(:db)}: start output to #{outfile}"
+    zhivago_logger.info "...#{Time.now.to_formatted_s(:db)}: start output to #{outfile}"
     File.open(outfile,'w') do |file|
       file.print 'period'
       suffixes.each{|suffix| file.print ",all#{suffix}#{$host_names.collect{|h| ",#{h}#{suffix}"}.join}#{$gateway_names.collect{|g|  ",#{g}#{suffix}"}.join}"}
       file.puts ''
 
       $period_lookup.keys.sort.each do |period|
-        shivago_logger.info "...#{Time.now.to_formatted_s(:db)}: #{line_number / 1024}K lines written to #{outfile}" if (line_number += 1) % 10240 == 0
+        zhivago_logger.info "...#{Time.now.to_formatted_s(:db)}: #{line_number / 1024}K lines written to #{outfile}" if (line_number += 1) % 10240 == 0
 
         period_data = $period_lookup[period]
         file.print period.strftime('%Y-%m-%d %H:%M:%S')
@@ -143,7 +143,7 @@ namespace :shivago do
         file.puts ''
       end
     end
-    shivago_logger.info "...#{Time.now.to_formatted_s(:db)}: #{line_number} lines written to #{outfile}"
+    zhivago_logger.info "...#{Time.now.to_formatted_s(:db)}: #{line_number} lines written to #{outfile}"
   end
 
   def print_keyed_data(file,period_data,offset)

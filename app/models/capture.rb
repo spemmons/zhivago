@@ -1,7 +1,7 @@
 class Capture < ActiveRecord::Base
   belongs_to :host
 
-  HEADERS ||= eval(File.readlines('lib/tasks/shivago.rake')[0] =~ /HEADERS = (.*)/ && $1)
+  HEADERS ||= eval(File.readlines('lib/tasks/zhivago.rake')[0] =~ /HEADERS = (.*)/ && $1)
   DATE_TOO_OLD = Time.mktime(2000,1,1)
   DATE_TOO_NEW = Time.now.advance(:days => 1)
 
@@ -34,7 +34,7 @@ class Capture < ActiveRecord::Base
     capture.logger = logger
     if capture.host.timezone.nil?
       logger.info "...host has no timezone"
-    elsif (capture_files = Dir["captures/#{capture_directory}/shivago*.csv"].sort).empty?
+    elsif (capture_files = Dir["captures/#{capture_directory}/zhivago*.csv"].sort).empty?
       logger.info "...no CSV files for capture"
     else
       capture_files.each{|capture_file| capture.import_capture_file(capture_file)}
@@ -162,7 +162,7 @@ class Capture < ActiveRecord::Base
   
 # helper methods
 
-  # NOTE shivago:export failed to properly identify events with the same name from different gateways
+  # NOTE zhivago:export failed to properly identify events with the same name from different gateways
   def fix_event_snafu(device,event_index)
     if (event = lookup_event(event_index)).gateway_id != device.gateway_id
       second_level_cache = @fix_event_snafu_cache[device.gateway_id]

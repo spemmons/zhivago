@@ -47,7 +47,7 @@ class PeriodicStat < ActiveRecord::Base
     end
 
     logger.info "...#{Time.now.to_s(:db)}: saving stat data to infile #{number_with_delimiter device_count} available devices with #{number_with_delimiter stat_count} stats"
-    infile = Rails.root + "shivago_stats_#{gateway.id}.txt"
+    infile = Rails.root + "zhivago_stats_#{gateway.id}.txt"
     File.open(infile,'w') do |file|
       period_cache.each do |period,stats|
         file.puts %(#{period.to_s(:db)}\t#{gateway.id}\t#{gateway.host.name}\t#{gateway.name}\t#{stats.join("\t")})

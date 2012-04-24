@@ -4,4 +4,4 @@
 require File.expand_path('../config/application', __FILE__)
 require 'rake'
 
-Shivago::Application.load_tasks
+Zhivago::Application.load_tasks

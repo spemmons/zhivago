@@ -1,4 +1,4 @@
-Shivago::Application.routes.draw do
+Zhivago::Application.routes.draw do
   
   resources :hosts
 

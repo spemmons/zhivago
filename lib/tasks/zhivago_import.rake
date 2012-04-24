@@ -1,15 +1,15 @@
-namespace :shivago do
+namespace :zhivago do
 
   desc 'refresh the already-imported hosts with new captures'
   task :refresh => :environment do
     Host.all(:order => :name).each_with_index do |host,index|
-      shivago_logger.info '' if index > 0
-      shivago_logger.info "update #{host.name}..."
+      zhivago_logger.info '' if index > 0
+      zhivago_logger.info "update #{host.name}..."
       import_host(host)
     end
   end
 
-  desc 'import captured readings from shivago*.csv or import=... ENV value'
+  desc 'import captured readings from zhivago*.csv or import=... ENV value'
   task :import => :environment do
     raise 'host not found' unless host = resolve_host_from_params
 
@@ -21,13 +21,13 @@ namespace :shivago do
     available_capture_names = Dir["captures/#{host.name}*"].collect{|directory| directory =~ /captures\/(.*)/ && $1}
     unprocessed_capture_names = available_capture_names - past_capture_names
     if unprocessed_capture_names.empty?
-      shivago_logger.info "no unprocessed captures for #{host.name}"
+      zhivago_logger.info "no unprocessed captures for #{host.name}"
     else
       unprocessed_capture_names.each{|capture_directory| Capture.import_for_host(host.name,host.timezone,capture_directory)}
     end
   rescue
-    shivago_logger.info "ERROR-A:#{$!}"
-    $@.each{|line| shivago_logger.info line}
+    zhivago_logger.info "ERROR-A:#{$!}"
+    $@.each{|line| zhivago_logger.info line}
     raise $!
   end
 

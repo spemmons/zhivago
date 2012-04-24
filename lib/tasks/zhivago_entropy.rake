@@ -1,4 +1,4 @@
-namespace :shivago do
+namespace :zhivago do
 
   desc 'calculate daily entropy'
   task :daily_entropy => :environment do
